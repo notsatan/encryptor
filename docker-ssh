@@ -1,0 +1,68 @@
+# NOTE:
+# Used to create a SSH-friendly docker container - includes a lot of internal setup stuff.
+# Initial build will be heavy - use with caution.
+#
+#   Expected Image Size :- 900 MiB
+#   Planned Mappings :- 22 >> 2222
+#   SSH Creds: albedo@albedo-ssh
+#   Base Support :- C++/C, Python
+#
+# Build Command
+# --------------
+#   docker build -t demon-rem/docker-ssh -f docker-ssh .
+#
+# Run Command
+# ------------
+#   docker run -d --cap-add sys_ptrace -p127.0.0.1:2222:22 --name albedo-ssh demon-rem/docker-ssh:latest
+#
+# The command runs the docker in image in detached mode (freeing up the console). The `--cap-add sys_ptrace`
+# is for debugging. Finally, mapping the containers SSH Port (22) to the port 2222 on host.
+#
+# Setting up a container with a fixed name to ensure that two containers don't run in parallel (since they map to same
+# port on the host).
+#
+# Suggestions
+# ------------
+# Should clear keys from the last run before running a new instance - shell this up.
+#   ssh-keygen -f "$HOME/.ssh/known_hosts" -R "[localhost]:2222"
+#
+
+
+# Using 18:04 - picking this one up after a really long reddit debate. No questions.
+FROM ubuntu:18.04
+
+# Updating all dependencies as needed.
+RUN apt-get update \
+  && apt-get install -y ssh \
+      build-essential \
+      gcc \
+      g++ \
+      gdb \
+      clang \
+      cmake \
+      rsync \
+      tar \
+      python \
+  && apt-get clean
+
+RUN ( \
+    echo 'LogLevel DEBUG2'; \
+    echo 'PermitRootLogin yes'; \
+    echo 'PasswordAuthentication yes'; \
+    echo 'Subsystem sftp /usr/lib/openssh/sftp-server'; \
+  ) > /etc/ssh/docker_ssh_config \
+  && mkdir /run/sshd
+
+# Setting up SSH to be able to access the container.
+# Note: The basic command to set up username and password for SSH;
+#
+#   RUN useradd -m <user> && yes <password> | passwd <user>
+# Replace the `<user>` and `<password>` entries as needed. Make sure that
+# `user` isn't an existing user - leads to weird responses in some systems.
+#
+# SSH Credentials:
+#   <user>@<password>
+RUN useradd -m albedo-ssh && yes albedo-ssh | passwd albedo
+
+# Adding ssh configs to make sure that the image is accessible using SSH.
+CMD ["/usr/sbin/sshd", "-D", "-e", "-f", "/etc/ssh/docker_ssh_config"]

@@ -9,24 +9,6 @@
 #define true 1
 #define false 0
 
-typedef short bool;
-typedef char *string;
-
-/**
- * An inline method made to replace the `strlen` call being made in loops - returns the result of a simple comparison
- * instead of calling a method that traverses the entire string to calculate its length.
- *
- * @param c - The current character being read from the string. Will be used to check if this character is at the end
- * of the string or not.
- *
- * @return
- * 		Boolean value indicating if the character is placed at the end of the string or not. A value of true indicates
- * 		that the character is placed at the end of the string.
- */
-inline bool str_end(char c) {
-	return c == '\0';
-}
-
 /**
  * Compares two strings and returns their result as a boolean. Can be used for case-insensitive or sensitive
  * comparisons as needed.
@@ -46,7 +28,7 @@ bool compare(const char *string01, const char *string02, const bool case_sensiti
 		return strcmp(string01, string02);
 
 	// If flow-of-control reaches here, assume that the check being made is case-insensitive.
-	for (unsigned int i = 0; !str_end(string01[i]) && !str_end(string02[i]); i++)
+	for (unsigned int i = 0; string01[i] != '\0' && string02[i] != '\0'; i++)
 		if (tolower(string01[i]) != tolower(string02[i]))
 			// Converting each character to lower case - returning false directly in case a match fails.
 			return false;
@@ -99,23 +81,24 @@ inline pcre *regex_compile(string regex_pattern) {
 }
 
 /**
- * 
+ * Method to convert a string to its lower-case equivalent.
  *
- * @param instance
+ * @param message: String containing the message that is to be converted to lowercase.
+ *
  * @return
+ * 		A string with the lowercase version of every character in the original message.
  */
-inline string map_crypt(enum crypt instance) {
-	switch (instance) {
-		case PLAYFAIR:
-			return "Play Fair";
+string convert_lower(string message) {
+	for (unsigned int i = 0; message[i] != '\0'; i++)
+		message[i] = tolower(message[i]);
 
-		case HILL:
-			return "Hill";
+	return message;
+}
 
-		case RAILFENCE:
-			return "Rail Fence";
-
-		default:
-			return "Unknown";
+void print_matrix(char matrix[5][5]) {
+	for (unsigned int i = 0; i < 5; i++) {
+		for (unsigned int j = 0; j < 5; j++)
+			printf("%c  ", matrix[i][j]);
+		printf("\n");
 	}
 }

@@ -2,7 +2,7 @@
 // use them as needed.
 
 #include <pcre.h>
-#include <stdio.h>
+
 #include <commons.h>
 
 #define true 1
@@ -89,6 +89,5 @@ char *extract_data(string regex_pattern, string input_string) {
 }
 
 int main(int argc, string *argv) {
-
 	return 0;
 }

@@ -13,9 +13,9 @@ typedef char *string;
 
 extern bool compare(const char *, const char *, bool);
 
-extern inline bool str_end(char);
-
 extern inline pcre *regex_compile(char *);
+
+extern string convert_lower(string message);
 
 /**
  * An enum to define the types of ciphers being used. Will be used to keep a track of the cipher selected
@@ -27,6 +27,6 @@ enum crypt {
 	RAILFENCE
 };
 
-extern inline char *map_crypt(enum crypt);
+extern void print_matrix(char[5][5]);
 
 #endif //__encryptor_commons

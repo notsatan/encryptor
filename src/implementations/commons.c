@@ -1,10 +1,10 @@
 // Implementation of the structures defined in the common headers file.
 
-#include "../headers/commons.h"
-
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
+
+#include "../headers/commons.h"
 
 #define true 1
 #define false 0
@@ -89,16 +89,35 @@ inline pcre *regex_compile(string regex_pattern) {
  * 		A string with the lowercase version of every character in the original message.
  */
 string convert_lower(string message) {
-	for (unsigned int i = 0; message[i] != '\0'; i++)
-		message[i] = tolower(message[i]);
+	for (int unsigned i = 0; message[i] != '\0'; i++)
+		message[i] = (char) tolower(message[i]);
 
 	return message;
 }
 
-void print_matrix(char matrix[5][5]) {
-	for (unsigned int i = 0; i < 5; i++) {
-		for (unsigned int j = 0; j < 5; j++)
-			printf("%c  ", matrix[i][j]);
-		printf("\n");
-	}
-}
+/**
+ * Copies the content of the original string and returns a copy of them
+ * in a new string.
+ *
+ * @param message: Source string. Contents of this string will be copied.
+ *
+ * @remarks
+ * 		Since modifications made to hard-coded string are a part of undefined
+ * 		behaviour and can crash the program, this method can be used to get a
+ * 		copy of the contents in a new string that can be modified.
+ *
+ * 		Note: This method will internally create a new pointer and copy -
+ * 		in essence, the string returned back is a new pointer. Using this
+ * 		method will lead to memory leaks unless the string is cleared off
+ * 		the memory once used.
+ *
+ * @return
+ * 		A string containing a copy of the contents of the original string.
+ */
+inline string gen_str(string message) {
+	// Creating temporary string of the required size.
+	string temp_message = (string) malloc(strlen(message) * sizeof(char));
+	strcpy(temp_message, message);
+
+	return temp_message;
+};

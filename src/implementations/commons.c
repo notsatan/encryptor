@@ -21,7 +21,7 @@
  * @return
  * 		Boolean indicating if the two strings match or not. True indicates a match.
  */
-bool compare(const char *string01, const char *string02, const bool case_sensitive) {
+bool compare(char *string01, char *string02, const bool case_sensitive) {
 	if (case_sensitive)
 		// Using an in-built method if a case-sensitive check is to be made - directly returning the value of the
 		// method call.

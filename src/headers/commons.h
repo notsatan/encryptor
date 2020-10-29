@@ -11,7 +11,7 @@
 typedef short bool;
 typedef char *string;
 
-extern bool compare(const char *, const char *, bool);
+extern bool compare(char *, char *, bool);
 
 extern inline pcre *regex_compile(char *);
 

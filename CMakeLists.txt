@@ -19,6 +19,11 @@ add_executable(
     src/encryptor.c
 )
 
+# Forcing the compiler to use C-11 over something else - results in a bit more streamlined
+# process to setup the project with a tiny bit of adjustments - and also what my SSH-friendly
+# docker container is currently using.
+set_property(TARGET encryptor PROPERTY C_STANDARD 11)
+
 # Adding the compile flags in debug mode. Will have to add these compile-time flags to the final release
 # mode as well.
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -lpcre -fms-extensions")

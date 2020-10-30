@@ -17,6 +17,10 @@
 // Length of edge of a single side in the key matrix.
 #define MATRIX_EDGE 5
 
+// Placeholder string used to define the values being replaced at each iteration
+// over the matrix.
+# define RULE_MESSAGE "  Replacement String:- \"%c%c\" %s\n"
+
 char key_matrix[MATRIX_EDGE][MATRIX_EDGE];
 
 /**
@@ -46,15 +50,39 @@ int find_position(char c) {
 }
 
 /**
- * Just a convenience method to be able to print the 2d matrix as needed. Exists
- * to complement the debugger, and have a graphical representation of the ciphers.
+ * Internal function to print the matrix. Defined as an inner-level API,
+ * that can either be accessed directly, or using the friendly-function.
+ *
+ * @param pad_char: String containing characters that are to be used as a padding.
+ * @param end_line: String to be printed after the final line of the matrix.
+ * 		Ideally, will be one or more new-line characters.
  */
-void print_matrix() {
+void _print_matrix(string pad_char, string end_line) {
 	for (unsigned int i = 0; i < MATRIX_EDGE; i++) {
+		// Avoiding printing a new line before the start of the matrix. While
+		// ensuring that the first line is actually padded with the character.
+		printf("%c%s", (i != 0) ? '\n' : '\0', pad_char);
 		for (unsigned int j = 0; j < MATRIX_EDGE; j++)
 			printf("%c  ", key_matrix[i][j]);
-		printf("\n");
 	}
+
+	// Printing the end-line character.
+	printf("%s", end_line);
+}
+
+
+/**
+ * Just a convenience method to be able to print the 2d matrix as needed. Exists
+ * to complement the debugger, and have a graphical representation of the ciphers.
+ *
+ * @remarks
+ * 		A friendly-method of the actual internal method - to conveniently print the
+ * 		matrix with zero padding, and pointing the cursor to the next line below the
+ * 		matrix. The internal method can be directly accessed in case custom
+ * 		padding/end-line character is needed.
+ */
+extern inline void print_matrix() {
+	_print_matrix("", "\n");
 }
 
 
@@ -108,7 +136,18 @@ void populate_key_matrix(string key) {
 	}
 }
 
-string play_fair(string message, string key) {
+/**
+ * Public method to implement the play-fair cipher algorithm.
+ *
+ * @param message: String containing the original message that is to be ciphered.
+ * 		Should contain only lower-cased alphabets - no other characters.
+ * @param key: String containing the key that is to be ciphered.
+ * @param noob_friendly: Boolean indicating if verbose output is needed.
+ *
+ * @return
+ * 		String containing a cipher of the original text message.
+ */
+string crypt_play_fair(string message, string key, bool noob_friendly) {
 	// Pad message with an additional character if needed - the result will have an even length.
 	message = (strlen(message) % 2 == 0) ? message : strcat(message, PAD_CHAR);
 
@@ -116,14 +155,22 @@ string play_fair(string message, string key) {
 	// remaining characters (except `IGNORE_CHAR`).
 	populate_key_matrix(key);        // Will internally populate `key_matrix`.
 
-	// Declaring the a string containing the result - will replace the values in this with the answer.
-	string result = message;
+	if (noob_friendly) {
+		printf("Key Matrix: \n");
+		_print_matrix("\t", "\n\n"); // Padding the matrix with a space.
+
+		printf("Original Message: \n\t`%s`\n\n\n", message);
+	}
 
 	// Performing the actual cipher.
 	// Taking alphabets from the message, two characters at a time.
 	for (int i = 1; message[i] != '\0'; i += 2) {
+		printf("PASS %d:\n", (i / 2) + 1);
 		char first = message[i - 1];
 		char second = message[i];
+
+		if (noob_friendly)
+			printf("  Original Sub-string: \"%c%c\"\n", first, second);
 
 		//Finding the location of the two characters in the matrix.
 		unsigned int pos_first = find_position(first);
@@ -144,6 +191,10 @@ string play_fair(string message, string key) {
 				second = key_matrix[0][pos_second % MATRIX_EDGE];
 			else
 				second = key_matrix[(pos_second / MATRIX_EDGE) + 1][pos_second % MATRIX_EDGE];
+
+			if (noob_friendly)
+				printf(RULE_MESSAGE, first, second, "(Rule-01)");
+
 		} else if ((pos_first / MATRIX_EDGE) == (pos_second / MATRIX_EDGE)) {
 			// If both the characters are in the same row, taking the character from the adjacent column.
 
@@ -157,6 +208,9 @@ string play_fair(string message, string key) {
 				second = key_matrix[pos_second / MATRIX_EDGE][0];
 			else
 				second = key_matrix[pos_second / MATRIX_EDGE][(pos_second % MATRIX_EDGE) + 1];
+
+			if (noob_friendly)
+				printf(RULE_MESSAGE, first, second, "(Rule-02)");
 		} else {
 			// If both the above rules fail, forming a rectangle, and replacing the characters
 			// from the diagonally-opposite corner of the matrix.
@@ -165,12 +219,17 @@ string play_fair(string message, string key) {
 			// the column.
 			first = key_matrix[pos_first / MATRIX_EDGE][pos_second % MATRIX_EDGE];
 			second = key_matrix[pos_second / MATRIX_EDGE][pos_first % MATRIX_EDGE];
+
+			if (noob_friendly)
+				printf(RULE_MESSAGE, first, second, "(Rule-03)");
 		}
 
 		// Adding these characters to the result string.
-		result[i - 1] = first;
-		result[i] = second;
+		message[i - 1] = first;
+		message[i] = second;
+
+		printf("  Resultant String; \n\t`%s`\n\n", message);
 	}
 
-	return result;
+	return message;
 }

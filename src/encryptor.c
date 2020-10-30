@@ -136,7 +136,7 @@ int main(int argc, string *argv) {
 				original_message = extract_data(p_message, argument);
 			} else {
 				printf("Error: Unexpected argument detected `%s`\n\n", argument);
-				exit(10);
+				exit(-10);
 			}
 		}
 	}
@@ -179,7 +179,7 @@ int main(int argc, string *argv) {
 		"PlayFair",
 		false
 	)) {
-		result = play_fair(cipher_temp_message, modified_key);
+		result = crypt_play_fair(cipher_temp_message, modified_key, true);
 	}
 
 	printf("Cipher Type: %s \nCipher Key: %s \nEncrypted Message: %s", cipher_type, cipher_key, result);

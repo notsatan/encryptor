@@ -8,6 +8,6 @@ typedef short bool;
 typedef char *string;
 typedef const char *const_str;
 
-string play_fair(string, string);
+string crypt_play_fair(string message, string key, bool noob_friendly);
 
 #endif //__encryptor_ciphers

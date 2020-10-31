@@ -14,6 +14,7 @@ add_executable(
 
     src/headers/ciphers.h
     src/implementations/play_fair.c
+    src/implementations/hill_cipher.c
 
     # Adding the main project file as an executable once everything else has been compiled.
     src/encryptor.c

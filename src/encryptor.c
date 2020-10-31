@@ -108,7 +108,7 @@ string extract_data(string regex_pattern, string input_string) {
  */
 void subroutine() {
 	// Debug/Test code here.
-//	init();
+	crypt_hill_cipher("retreatnow", "backup", true);
 
 	// Printing a message to avoid any confusion.
 	printf("\n\nDebug run terminated.\n");

@@ -101,7 +101,23 @@ string extract_data(string regex_pattern, string input_string) {
 		return "";
 }
 
+/**
+ * A test method made for debugging/editing the code without making any
+ * breaking changes to the main method. Designed so that the flow-of-control
+ * ends the program instead of goind back to the main method.
+ */
+void subroutine() {
+	// Debug/Test code here.
+//	init();
+
+	// Printing a message to avoid any confusion.
+	printf("\n\nDebug run terminated.\n");
+	exit(0);
+}
+
 int main(int argc, string *argv) {
+	subroutine();
+
 	string cipher_type = NULL;
 
 	string original_message = NULL;
@@ -141,7 +157,6 @@ int main(int argc, string *argv) {
 		}
 	}
 
-
 	if (cipher_type == NULL) {
 		printf("\nDefaulting cipher type to `playfair`\n");
 		cipher_type = gen_str("playfair");
@@ -153,8 +168,8 @@ int main(int argc, string *argv) {
 	}
 
 	if (original_message == NULL) {
-		printf("\nDefaulting message to `cipher text in here`\n");
-		original_message = gen_str("cipher text in here");
+		printf("\nDefaulting message to `ciphers`\n");
+		original_message = gen_str("ciphers");
 	}
 
 	// Performing replacements in cipher message.
@@ -182,7 +197,7 @@ int main(int argc, string *argv) {
 		result = crypt_play_fair(cipher_temp_message, modified_key, true);
 	}
 
-	printf("Cipher Type: %s \nCipher Key: %s \nEncrypted Message: %s", cipher_type, cipher_key, result);
+	printf("\n\nCipher Type: %s \nCipher Key: %s \nEncrypted Message: %s\n\n\n", cipher_type, cipher_key, result);
 
 	return 0;
 }

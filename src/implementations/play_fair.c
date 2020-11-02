@@ -41,7 +41,7 @@ char pf_key_matrix[MATRIX_EDGE][MATRIX_EDGE];
  * @return
  * 		An integer that can be mapped mapped to a 2d matrix.
  */
-int find_position(char c) {
+int pf_find_position(char c) {
 	if (c == IGNORE_CHAR)
 		// If the ignorable character is being searched for, replacing it.
 		c = REPLACE_CHAR;
@@ -64,7 +64,7 @@ int find_position(char c) {
  *
  * @param key: The key used to populate the key matrix.
  */
-void populate_pf_key(string key) {
+void pf_populate_key(string key) {
 	// Boolean array - each value represents the alphabet at that index. Used to keep a track
 	// of alphabets included in the matrix - ensures no repetitions. Initializing all values as false.
 	bool chars[26] = {false};
@@ -114,7 +114,7 @@ void populate_pf_key(string key) {
  * @param end_line: String to be printed after the final line of the matrix.
  * 		Ideally, will be one or more new-line characters.
  */
-void _print_fair_key(string pad_char, string end_line) {
+void _pf_print_key(string pad_char, string end_line) {
 	for (unsigned int i = 0; i < MATRIX_EDGE; i++) {
 		// Avoiding printing a new line before the start of the matrix. While
 		// ensuring that the first line is actually padded with the character.
@@ -138,8 +138,8 @@ void _print_fair_key(string pad_char, string end_line) {
  * 		matrix. The internal method can be directly accessed in case custom
  * 		padding/end-line character is needed.
  */
-extern inline void print_fair_key() {
-	_print_fair_key("", "\n");
+extern inline void pf_print_key() {
+	_pf_print_key("", "\n");
 }
 
 
@@ -149,22 +149,22 @@ extern inline void print_fair_key() {
  * @param message: String containing the original message that is to be ciphered.
  * 		Should contain only lower-cased alphabets - no other characters.
  * @param key: String containing the key that is to be ciphered.
- * @param noob_friendly: Boolean indicating if verbose output is needed.
+ * @param is_noob: Boolean indicating if verbose output is needed.
  *
  * @return
  * 		String containing a cipher of the original text message.
  */
-string crypt_play_fair(string message, string key, bool noob_friendly) {
+string crypt_play_fair(string message, string key, bool is_noob) {
 	// Pad message with an additional character if needed - the result will have an even length.
 	message = (strlen(message) % 2 == 0) ? message : strcat(message, PAD_CHAR);
 
 	// Declaring a 2d char array to contain the key matrix, populating it with the key and
 	// remaining characters (except `IGNORE_CHAR`).
-	populate_pf_key(key);        // Will internally populate `pf_key_matrix`.
+	pf_populate_key(key);        // Will internally populate `pf_key_matrix`.
 
-	if (noob_friendly) {
+	if (is_noob) {
 		printf("Key Matrix: \n");
-		_print_fair_key("\t", "\n\n"); // Padding the matrix with a space.
+		_pf_print_key("\t", "\n\n"); // Padding the matrix with a space.
 
 		printf("Original Message: \n\t`%s`\n\n\n", message);
 	}
@@ -175,13 +175,13 @@ string crypt_play_fair(string message, string key, bool noob_friendly) {
 		char first = message[i - 1];
 		char second = message[i];
 
-		if (noob_friendly) {
+		if (is_noob) {
 			printf("PASS %d:\n", (i / 2) + 1);
 			printf("  Original Sub-string: \"%c%c\"\n", first, second);
 		}
 		//Finding the location of the two characters in the matrix.
-		unsigned int pos_first = find_position(first);
-		unsigned int pos_second = find_position(second);
+		unsigned int pos_first = pf_find_position(first);
+		unsigned int pos_second = pf_find_position(second);
 
 		if ((pos_first % MATRIX_EDGE) == (pos_second % MATRIX_EDGE)) {
 			// If both letters are from the same column, taking the character from one row below them.
@@ -199,7 +199,7 @@ string crypt_play_fair(string message, string key, bool noob_friendly) {
 			else
 				second = pf_key_matrix[(pos_second / MATRIX_EDGE) + 1][pos_second % MATRIX_EDGE];
 
-			if (noob_friendly)
+			if (is_noob)
 				printf(RULE_MESSAGE, first, second, "(Rule-01)");
 
 		} else if ((pos_first / MATRIX_EDGE) == (pos_second / MATRIX_EDGE)) {
@@ -216,7 +216,7 @@ string crypt_play_fair(string message, string key, bool noob_friendly) {
 			else
 				second = pf_key_matrix[pos_second / MATRIX_EDGE][(pos_second % MATRIX_EDGE) + 1];
 
-			if (noob_friendly)
+			if (is_noob)
 				printf(RULE_MESSAGE, first, second, "(Rule-02)");
 		} else {
 			// If both the above rules fail, forming a rectangle, and replacing the characters
@@ -227,7 +227,7 @@ string crypt_play_fair(string message, string key, bool noob_friendly) {
 			first = pf_key_matrix[pos_first / MATRIX_EDGE][pos_second % MATRIX_EDGE];
 			second = pf_key_matrix[pos_second / MATRIX_EDGE][pos_first % MATRIX_EDGE];
 
-			if (noob_friendly)
+			if (is_noob)
 				printf(RULE_MESSAGE, first, second, "(Rule-03)");
 		}
 
@@ -235,7 +235,7 @@ string crypt_play_fair(string message, string key, bool noob_friendly) {
 		message[i - 1] = first;
 		message[i] = second;
 
-		if (noob_friendly)
+		if (is_noob)
 			printf("  Resultant String; \n\t`%s`\n\n", message);
 	}
 

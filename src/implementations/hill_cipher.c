@@ -50,7 +50,7 @@ char hc_key_matrix[MATRIX_SIZE][MATRIX_SIZE];
  *
  * @param key: String containing the key used to populate the matrix with value.
  */
-void populate_hill_key(string key) {
+void hc_populate_key(string key) {
 	// Using the original key if it is long enough to populate the key matrix,
 	// if not, filling the rest of the space with alphabetical characters.
 	unsigned int string_length = strlen(key);
@@ -59,7 +59,6 @@ void populate_hill_key(string key) {
 		hc_key_matrix[i / MATRIX_SIZE][i % MATRIX_SIZE] =
 			(i < string_length) ? key[i] : (char) counter++ + 97;
 }
-
 
 /**
  * Internal function to print the matrix. Defined as an inner-level API,
@@ -179,9 +178,21 @@ void hc_current_mapping(string multiplier, string result, const_str padding, con
 	printf("%s", end_line);
 }
 
+/**
+ * Public method to implement the Hill Cipher algorithm to encrypt text.
+ *
+ * @param message: String containing the message to be encrypted.
+ * @param key: String containing the message to be used as a key.
+ * @param is_noob: Boolean indicating if verbose mode is to be used.
+ *
+ * @return
+ * 		A string containing the encrypted version of the original text message.
+ * 		Will be devoid of all spaces, can be mapped to the input string to
+ * 		be able to add back spaces as needed.
+ */
 string crypt_hill_cipher(string message, string key, bool is_noob) {
 	// Generating the key matrix.
-	populate_hill_key(key);
+	hc_populate_key(key);
 
 	if (is_noob) {
 		printf("Key Matrix:\n");

@@ -19,6 +19,10 @@ extern string convert_lower(string message);
 
 extern inline string gen_str(string);
 
+extern inline string raw_gen_str(string, unsigned int);
+
+extern inline string gen_str_pad(string, unsigned int);
+
 /**
  * An enum to define the types of ciphers being used. Will be used to keep a track of the cipher selected
  * by the user.

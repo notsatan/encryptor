@@ -95,6 +95,55 @@ string convert_lower(string message) {
 	return message;
 }
 
+
+/**
+ * Internal method to create a copy of a string while also specifying the
+ * length of the new string.
+ *
+ * @remarks
+ * 		This method is a slight-modified version of `gen_str`, in case edge
+ * 		cases it is required to copy a string while leaving space for a few
+ * 		extra characters in the new string - this method is intended to be
+ * 		used in such scenario(s).
+ *
+ * @note
+ *		If the length required is less than the length of the original
+ * 		string, only the first `len-1` characters from the original string will
+ * 		be copied over.
+ *
+ * @note
+ * 		A length of `0` indicates that this method will create a new string
+ * 		with an exact copy of the original string - without leaving any
+ * 		extra space(s).
+ *
+ * @note
+ * 		Caution: New string(s) are created by this method using `malloc`
+ * 		internally - as such, they need to be manually destroyed in order to
+ * 		avoid memory leaks (or overflows).
+ *
+ * @param message: String containing the message that is to be copied over.
+ * @param len: Unsigned integer indicating the required length of the new string.
+ *
+ * @return
+ * 		String that is a copy of the original string and has the required length.
+ */
+inline string raw_gen_str(string message, unsigned int len) {
+	if (len == 0)
+		// If a length of zero is supplied, modifying it to containing the length
+		// of the source string + 1 (extra space for string terminator)
+		len = strlen(message) + 1;
+
+	// Creating a new string.
+	string temp = (string) malloc(len * sizeof(char));
+
+	for (unsigned int i = 0; i < len - 1; i++)
+		temp[i] = message[i];
+
+	// Adding the string terminator to the end of the string.
+	temp[len] = '\0';
+	return temp;
+}
+
 /**
  * Copies the content of the original string and returns a copy of them
  * in a new string.
@@ -106,18 +155,47 @@ string convert_lower(string message) {
  * 		behaviour and can crash the program, this method can be used to get a
  * 		copy of the contents in a new string that can be modified.
  *
- * 		Note: This method will internally create a new pointer and copy -
- * 		in essence, the string returned back is a new pointer. Using this
- * 		method will lead to memory leaks unless the string is cleared off
- * 		the memory once used.
+ * @note
+ * 		This method delegates to `raw_gen_str` method internally. The length
+ * 		of the string created will be equal to the source string (+1 for
+ * 		string terminator).
+ *
+ * 	@note
+ * 		Any call to this method will result in a call to `malloc`, as such,
+ * 		strings returned by this method should be destroyed once they're used
+ * 		or it could lead to a potential memory leak.
  *
  * @return
  * 		A string containing a copy of the contents of the original string.
  */
 inline string gen_str(string message) {
-	// Creating temporary string of the required size.
-	string temp_message = (string) malloc(strlen(message) * sizeof(char));
-	strcpy(temp_message, message);
+	return raw_gen_str(message, 0);
+}
 
-	return temp_message;
-};
+/**
+ * Internal method to create a copy of the source string with additional space to
+ * concatenate extra text as needed.
+ *
+ * @remarks
+ * 		Internally delegates to the `raw_str_gen` method - as such uses `malloc`
+ * 		to assign space to the new string being created.
+ *
+ * @note
+ * 		Strings created by this method will have to be manually destroyed - or it could
+ * 		lead to a potential memory leak.
+ *
+ * @note
+ * 		Strings created by this message will have a total length of `strlen(message)` +
+ * 		`pad_length` + 1 (for the string terminator).
+ *
+ * @param message: Source string that is to be copied over.
+ * @param pad_length: Unsigned integer containing the extra size required in the resultant
+ * 		string.
+ *
+ * @return
+ * 		String containing a copy of the contents of the original string, and the extra space
+ * 		as required.
+ */
+inline string gen_str_pad(string message, unsigned int pad_length) {
+	return raw_gen_str(message, strlen(message) + pad_length);
+}

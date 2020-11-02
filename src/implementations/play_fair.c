@@ -154,8 +154,11 @@ extern inline void pf_print_key() {
  * @return
  * 		String containing a cipher of the original text message.
  */
-string crypt_play_fair(string message, string key, bool is_noob) {
-	// Pad message with an additional character if needed - the result will have an even length.
+string crypt_play_fair(string original_message, string key, bool is_noob) {
+	// Creating a copy of the original string with extra space to pad if needed.
+	string message = gen_str_pad(original_message, 1);
+
+	// Pad message with an additional character - the result should have an even length.
 	message = (strlen(message) % 2 == 0) ? message : strcat(message, PAD_CHAR);
 
 	// Declaring a 2d char array to contain the key matrix, populating it with the key and
@@ -164,14 +167,14 @@ string crypt_play_fair(string message, string key, bool is_noob) {
 
 	if (is_noob) {
 		printf("Key Matrix: \n");
-		_pf_print_key("\t", "\n\n"); // Padding the matrix with a space.
+		_pf_print_key("\t", "\n\n"); // Padding the matrix with space.
 
 		printf("Original Message: \n\t`%s`\n\n\n", message);
 	}
 
 	// Performing the actual cipher.
 	// Taking alphabets from the message, two characters at a time.
-	for (int i = 1; message[i] != '\0'; i += 2) {
+	for (unsigned int i = 1; message[i] != '\0'; i += 2) {
 		char first = message[i - 1];
 		char second = message[i];
 
@@ -179,6 +182,7 @@ string crypt_play_fair(string message, string key, bool is_noob) {
 			printf("PASS %d:\n", (i / 2) + 1);
 			printf("  Original Sub-string: \"%c%c\"\n", first, second);
 		}
+
 		//Finding the location of the two characters in the matrix.
 		unsigned int pos_first = pf_find_position(first);
 		unsigned int pos_second = pf_find_position(second);
@@ -238,6 +242,106 @@ string crypt_play_fair(string message, string key, bool is_noob) {
 		if (is_noob)
 			printf("  Resultant String; \n\t`%s`\n\n", message);
 	}
+
+	return message;
+}
+
+/**
+ * Public method to implement
+ *
+ * @param original_message
+ * @param key
+ * @param is_noob
+ * @return
+ */
+string decrypt_play_fair(string original_message, string key, bool is_noob) {
+	// Creating a copy of the source message with extra space to pad.
+	string message = gen_str_pad(original_message, 1);
+
+	// Padding the message with extra character if needed.
+	message = (strlen(message) % 2 == 0) ? message : strcat(message, PAD_CHAR);
+
+	// Populating the key matrix.
+	pf_populate_key(key);
+
+	if (is_noob) {
+		// Printing some additional info if the user needs verbose mode.
+		printf("Key Matrix: \n");
+		_pf_print_key("\t", "\n\n"); // Padding the matrix with space.
+
+		printf("Original Message: \n\t`%s`\n\n\n", message);
+	}
+
+	// Deciphering the cipher text. Taking two characters at a time - having them
+	// undergo a process opposite to the process of ciphering the text.
+	for (unsigned int i = 1; message[i] != '\0'; i += 2) {
+		// Getting a pair of characters for this iteration
+		char first = message[i - 1];
+		char second = message[i];
+
+		// Finding the position of these characters within the matrix.
+		unsigned int pos_first = pf_find_position(first);
+		unsigned int pos_second = pf_find_position(second);
+
+		if (is_noob) {
+			printf("\nPASS %d:\n", (i / 2) + 1);
+			printf("  Original Sub-string: \"%c%c\"\n", first, second);
+		}
+
+		// Depending on the rules in this cipher, altering the ciphered text to get back
+		// the original message.
+		if ((pos_first % MATRIX_EDGE) == (pos_second % MATRIX_EDGE)) {
+			// If both characters are from the same column, selecting the character from
+			// one column above them.
+
+			if (pos_first / MATRIX_EDGE == 0)
+				// If the element is in the top-most row, picking up an element from
+				// the bottom row.
+				first = pf_key_matrix[MATRIX_EDGE - 1][pos_first % MATRIX_EDGE];
+			else
+				first = pf_key_matrix[(pos_first / MATRIX_EDGE) - 1][pos_first % MATRIX_EDGE];
+
+			// Repeating the same for the second element.
+			if (pos_second / MATRIX_EDGE == 0)
+				second = pf_key_matrix[MATRIX_EDGE - 1][pos_second % MATRIX_EDGE];
+			else
+				second = pf_key_matrix[(pos_second / MATRIX_EDGE) - 1][pos_second % MATRIX_EDGE];
+
+			if (is_noob)
+				printf(RULE_MESSAGE, first, second, "(Rule-01)");
+		} else if ((pos_first / MATRIX_EDGE) == (pos_second / MATRIX_EDGE)) {
+			// If both characters are from the same row, taking a character from adjacent column.
+
+			if ((pos_first % MATRIX_EDGE) == 0)
+				// If this is the first column, picking an element from the last column.
+				first = pf_key_matrix[pos_first / MATRIX_EDGE][MATRIX_EDGE - 1];
+			else
+				first = pf_key_matrix[pos_first / MATRIX_EDGE][(pos_first % MATRIX_EDGE) - 1];
+
+			if ((pos_second % MATRIX_EDGE) == 0)
+				second = pf_key_matrix[pos_second / MATRIX_EDGE][MATRIX_EDGE - 1];
+			else
+				second = pf_key_matrix[pos_second / MATRIX_EDGE][(pos_second / MATRIX_EDGE) - 1];
+
+			if (is_noob)
+				printf(RULE_MESSAGE, first, second, "(Rule-02)");
+		} else {
+			// If both the conditions fail, making a rectangle, and replacing the characters from
+			// the diagonally opposite vertex of the rectangle.
+
+			first = pf_key_matrix[pos_first / MATRIX_EDGE][pos_second % MATRIX_EDGE];
+			second = pf_key_matrix[pos_second / MATRIX_EDGE][pos_first % MATRIX_EDGE];
+
+			if (is_noob)
+				printf(RULE_MESSAGE, first, second, "(Rule-03)");
+		}
+
+		message[i - 1] = first;
+		message[i] = second;
+	}
+
+	if (is_noob)
+		printf("  Resultant String; \n\t`%s`\n\n", message);
 
 	return message;
 }

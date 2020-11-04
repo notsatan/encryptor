@@ -15,6 +15,8 @@ extern bool compare(char *, char *, bool);
 
 extern inline pcre *regex_compile(char *);
 
+extern inline bool l_compare(string, string);
+
 extern string convert_lower(string message);
 
 extern inline string gen_str(string);
@@ -25,16 +27,27 @@ extern inline string gen_str_pad(string, unsigned int);
 
 bool validate(string pattern, string message);
 
-string extract(string pattern, string message);
+string extract_data(string pattern, string message);
+
+extern inline string scan_str(string destination, unsigned int length);
 
 /**
  * An enum to define the types of ciphers being used. Will be used to keep a track of the cipher selected
  * by the user.
+ *
+ * @note
+ * 		If a new crypt technique is being added, the relevant changes are to be made in:
+ * 		`commons.c/map_cipher`;
+ * 		`data_input.c/interactive`;
+ * 		`data_input.c/fetch_cli_args`
  */
 enum crypt {
 	PLAYFAIR,
 	HILL,
-	RAILFENCE
+	RAILFENCE,
+	UNDEFINED
 };
+
+extern inline enum crypt map_cipher(string cipher_name);
 
 #endif //__encryptor_commons

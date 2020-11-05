@@ -13,7 +13,10 @@ typedef short bool;
 typedef char *string;
 typedef const char *const_str;
 
-string crypt_play_fair(string, string, bool);
+
+string crypt_play_fair(string message, string key, bool verbose);
+
+string decrypt_play_fair(string message, string key, bool verbose);
 
 string crypt_hill_cipher(string, string, bool);
 

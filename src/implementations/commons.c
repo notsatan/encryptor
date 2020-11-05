@@ -37,6 +37,42 @@ bool compare(char *string01, char *string02, const bool case_sensitive) {
 }
 
 /**
+ * An internal method to perform string comparison. Performs a case-insensitive
+ * check.
+ *
+ * @remarks
+ * 		Similar to `compare` method, however, this method works only in
+ * 		case-insensitive mode - performs the check by converting only characters
+ * 		from the first string to lower case before performing the check.
+ *
+ * @remarks
+ * 		Useful to compare a normal string to a string literal while ensuring
+ * 		a case-insensitive comparison.
+ *
+ * @param val01: String containing text that is to be converted to lower-case before comparison.
+ * @param val02: String that is to be directly compared - preferably a string literal.
+ *
+ * @return
+ * 		Boolean indicating if the two strings are an exact match of each other or not.
+ * 		The check performed is case-sensitive.
+ */
+inline bool l_compare(string val01, string val02) {
+	unsigned int len01 = strlen(val01);
+	unsigned int len02 = strlen(val02);
+
+	if (len01 != len02)
+		return false;
+
+	for (unsigned int i = 0; i < len01; i++)
+		// Comparing by simply converting characters from left string to lower-case
+		// while performing a check - return false if any check fails.
+		if (tolower(val01[i]) != val02[i])
+			return false;
+
+	return true;
+}
+
+/**
  * Compiles a string into a regex pattern - a simple convenience method to compile a
  * regex pattern while internally handling any errors as needed.
  *
@@ -95,6 +131,55 @@ string convert_lower(string message) {
 	return message;
 }
 
+
+/**
+ * Internal method to create a copy of a string while also specifying the
+ * length of the new string.
+ *
+ * @remarks
+ * 		This method is a slight-modified version of `gen_str`, in case edge
+ * 		cases it is required to copy a string while leaving space for a few
+ * 		extra characters in the new string - this method is intended to be
+ * 		used in such scenario(s).
+ *
+ * @note
+ *		If the length required is less than the length of the original
+ * 		string, only the first `len-1` characters from the original string will
+ * 		be copied over.
+ *
+ * @note
+ * 		A length of `0` indicates that this method will create a new string
+ * 		with an exact copy of the original string - without leaving any
+ * 		extra space(s).
+ *
+ * @note
+ * 		Caution: New string(s) are created by this method using `malloc`
+ * 		internally - as such, they need to be manually destroyed in order to
+ * 		avoid memory leaks (or overflows).
+ *
+ * @param message: String containing the message that is to be copied over.
+ * @param len: Unsigned integer indicating the required length of the new string.
+ *
+ * @return
+ * 		String that is a copy of the original string and has the required length.
+ */
+inline string raw_gen_str(string message, unsigned int len) {
+	if (len == 0)
+		// If a length of zero is supplied, modifying it to containing the length
+		// of the source string + 1 (extra space for string terminator)
+		len = strlen(message) + 1;
+
+	// Creating a new string.
+	string temp = (string) malloc(len * sizeof(char));
+
+	for (unsigned int i = 0; i < len - 1; i++)
+		temp[i] = message[i];
+
+	// Adding the string terminator to the end of the string.
+	temp[len] = '\0';
+	return temp;
+}
+
 /**
  * Copies the content of the original string and returns a copy of them
  * in a new string.
@@ -106,18 +191,196 @@ string convert_lower(string message) {
  * 		behaviour and can crash the program, this method can be used to get a
  * 		copy of the contents in a new string that can be modified.
  *
- * 		Note: This method will internally create a new pointer and copy -
- * 		in essence, the string returned back is a new pointer. Using this
- * 		method will lead to memory leaks unless the string is cleared off
- * 		the memory once used.
+ * @note
+ * 		This method delegates to `raw_gen_str` method internally. The length
+ * 		of the string created will be equal to the source string (+1 for
+ * 		string terminator).
+ *
+ * 	@note
+ * 		Any call to this method will result in a call to `malloc`, as such,
+ * 		strings returned by this method should be destroyed once they're used
+ * 		or it could lead to a potential memory leak.
  *
  * @return
  * 		A string containing a copy of the contents of the original string.
  */
 inline string gen_str(string message) {
-	// Creating temporary string of the required size.
-	string temp_message = (string) malloc(strlen(message) * sizeof(char));
-	strcpy(temp_message, message);
+	return raw_gen_str(message, 0);
+}
 
-	return temp_message;
-};
+/**
+ * Internal method to create a copy of the source string with additional space to
+ * concatenate extra text as needed.
+ *
+ * @remarks
+ * 		Internally delegates to the `raw_str_gen` method - as such uses `malloc`
+ * 		to assign space to the new string being created.
+ *
+ * @note
+ * 		Strings created by this method will have to be manually destroyed - or it could
+ * 		lead to a potential memory leak.
+ *
+ * @note
+ * 		Strings created by this message will have a total length of `strlen(message)` +
+ * 		`pad_length` + 1 (for the string terminator).
+ *
+ * @param message: Source string that is to be copied over.
+ * @param pad_length: Unsigned integer containing the extra size required in the resultant
+ * 		string.
+ *
+ * @return
+ * 		String containing a copy of the contents of the original string, and the extra space
+ * 		as required.
+ */
+inline string gen_str_pad(string message, unsigned int pad_length) {
+	return raw_gen_str(message, strlen(message) + pad_length);
+}
+
+
+/**
+ * Compares a regex pattern against a string. Just a convenience module to segregate the
+ * part of code interacting with the regex engine.
+ *
+ * @param regex_pattern: String containing the regex pattern that is to be compiled.
+ * @param input: Input which is to be verified against the regex pattern.
+ *
+ * @remarks
+ * 		Will simply perform a check as to whether a string matches the given pattern. Does not
+ * 		extract groups and/or return them back to the calling method. Exists as a simple
+ * 		litmus test.
+ *
+ * @return
+ * 		Boolean value containing true if the pattern compiles successfully and matches the input
+ * 		string. False increase the string does not match with the pattern.
+ */
+bool validate(string regex_pattern, string input) {
+	if (input == NULL || regex_pattern == NULL)
+		// Prevent random errors
+		return false;
+
+	// Checking the compiled pattern against input string and returning the result.
+	int result = pcre_exec(
+		regex_compile(regex_pattern),  // The compiled pattern against which string is to be checked.
+		NULL,                          // No associated structure required.
+		input,                         // The string which is to be matched to the compiled pattern.
+		(int) strlen(input),           // Basically, the length up to which the pattern is to be checked.
+		0,                             // Matching the pattern from the start of the string - no offset required.
+		0,                             // No special options needed
+		0,                             // No result offsets to be acquired - used if groups are to be extracted.
+		0                              // Again, no result offsets to be acquired.
+	);
+
+	if (result < 0)
+		// If the result is negative - the string failed does not match the pattern
+		return false;
+
+	return true;
+}
+
+/**
+ * Extracts a value from a string by compiling a valid regex pattern.
+ *
+ * @remarks
+ * 		Used to extract a single value from a string using a regex pattern. The
+ * 		internal implementation of the header file is botch-y at best, due to
+ * 		which the output obtained by extracting the value of the regex expression
+ * 		from the string can be faulty.
+ *
+ * @param regex_pattern: String containing the regex pattern that is to be compiled and extracted from.
+ * @param input_string: The input string against which the regex pattern is to be compiled and tested.
+ *
+ * @return
+ * 		Value obtained by extracting the value of the regex pattern by matching it against the input
+ * 		string.
+ */
+string extract_data(string regex_pattern, string input_string) {
+	int vector_size = 48;
+	int result_vector[vector_size];
+
+	int rc = pcre_exec(
+		regex_compile(regex_pattern),
+		0,
+		input_string,
+		(int) strlen(input_string),
+		0,
+		0,
+		result_vector,
+		vector_size
+	);
+
+	if (rc >= 3)
+		return input_string + result_vector[2];
+	else
+		return "";
+}
+
+/**
+ * Maps a string to a cipher-type enum. Used to accept a parameter from the user
+ * and convert it into an enum-value that can be stored and matched easily.
+ *
+ * @remarks
+ * 		In case the text cannot be mapped to a valid enum value, the result returned
+ * 		by this tuple will be of the type `UNDEFINED`. And the calling method should
+ * 		handle such a response appropriately.
+ *
+ * @param message: String text that is to be mapped to an enum value.
+ *
+ * @return
+ * 		A value of type `crypt` indicating the cipher type that the text maps to.
+ */
+inline enum crypt map_cipher(string message) {
+	if (l_compare(message, "playfair"))
+		return PLAYFAIR;
+	else
+		return UNDEFINED;
+}
+
+
+/**
+ * Convenience method to emulate the behaviour of `fgets` method to read a string
+ * as input from stdin.
+ *
+ * @remarks
+ * 		Will read one character at a time from stdin, and append it to destination
+ * 		string. If the character is string terminator, or new-line character - will
+ * 		stop reading from stdin and return the string formed.
+ *
+ * @notes
+ * 		Exists to replace `fgets` as it reads (and appends) newline character
+ * 		to the destination string - which is not needed, and makes the output
+ * 		be messy if it is being printed.
+ *
+ * @notes
+ * 		Excessive dependency on static variables (as opposed to local ones) - to ensure
+ * 		that runtime of this method in low.
+ *
+ * @param dest: Pointer to the destination string where the output is to be stored.
+ * @param string_len: Unsigned integer containing the length of the source string.
+ *
+ * @return
+ * 		The source string after all modifications have been made to it.
+ */
+extern inline string scan_str(string dest, unsigned int string_len) {
+	// Static variables, will be initialized as needed - declaring once to eliminate
+	// the time being wasted in creating/destroying them.
+
+	static char c;
+	static unsigned int i;
+
+	for (i = 0; i < string_len - 1; i++) {
+		// Reading one character at a time from stdin.
+		c = getchar();
+
+		// Breaking the loop if the character is a new line or string-terminator.
+		if (c == '\n' || c == '\0') {
+			dest[i] = '\0';
+			break;
+		}
+
+		dest[i] = c;
+	}
+
+	// String-terminator at the end - space has already been reserved in the loop
+	dest[string_len] = '\0';
+	return dest;
+}

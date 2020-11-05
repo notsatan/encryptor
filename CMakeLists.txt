@@ -16,14 +16,12 @@ add_executable(
     src/implementations/play_fair.c
     src/implementations/hill_cipher.c
 
+    src/headers/data_input.h
+    src/implementations/data_input.c
+
     # Adding the main project file as an executable once everything else has been compiled.
     src/encryptor.c
 )
-
-# Forcing the compiler to use C-11 over something else - results in a bit more streamlined
-# process to setup the project with a tiny bit of adjustments - and also what my SSH-friendly
-# docker container is currently using.
-set_property(TARGET encryptor PROPERTY C_STANDARD 11)
 
 # Adding the compile flags in debug mode. Will have to add these compile-time flags to the final release
 # mode as well.

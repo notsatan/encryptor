@@ -7,31 +7,22 @@
 
 #include "commons.h"
 #include "ciphers.h"
+#include "data_input.h"
 
 #define true 1
 #define false 0
 
-#define INPUT_LIMIT 20
-#define LONG_INPUT 1000
-
-#define scan(c, limit) fgets(c, limit, stdin)
-
 typedef short bool;
 typedef char *string;
 typedef const char *const_str;
-
-struct user_input {
-	string name;
-};
 
 /**
  * A test method made for debugging/editing the code without making any
  * breaking changes to the main method. Designed so that the flow-of-control
  * ends the program instead of going back to the main method.
  */
-void subroutine() {
+void subroutine(int argc, string *argv) {
 	// Debug/Test code here.
-//	init();
 
 	// Printing a message to avoid any confusion.
 	printf("\n\nDebug run terminated.\n");
@@ -39,88 +30,53 @@ void subroutine() {
 }
 
 int main(int argc, string *argv) {
-	subroutine();
+	//	subroutine(argc, argv);
 
-	string cipher_type = NULL;
+	// Declaring a structure to accept/process user input.
+	struct user_data data;
 
-	string original_message = NULL;
-	string cipher_key = NULL;
+	// Reading user input - either from stdin, or in interactive mode with the user.
+	populate_data(&data, argc, argv);
 
-	string p_cipher_val = "(?i)((playfair))";
-	string p_message_val = "[a-zA-Z_ ]+";
+	// Printing the input received so far as a part of the result.
+	printf("\nOriginal Key: `%s` \n\tProcessed Key: `%s`"
+		   "\n\nOriginal Message: \n\t%s \n\nProcessed Message: \n\t%s\n",
+		   data.cipher_key,
+		   data.processed_key,
+		   data.cipher_message,
+		   data.processed_message
+	);
 
-	bool cli_detected = false;
+	string result = NULL;
 
-	if (argc > 1) {
-		// Block to extract values from command-line parameters being passed.
-		// The first parameter is the path to the script being run - useless.
-
-		cli_detected = true; // Marking that command-line arguments have been detected.
-
-		// Regex patterns being used to extract values
-		string p_cipher_type = "^--cipher=(?i)((playfair))$";
-		string p_cipher_key = "^--key=(([a-zA-Z ]+))$";
-		string p_message = "^--message=((.+))$";
-
-		// Iterating over all arguments except the first one.
-		for (int i = 1; i < argc; i++) {
-			string argument = argv[i];
-
-			// Validating if a pattern matches the argument - extracting values if so.
-			if (validate(p_cipher_type, argument)) {
-				cipher_type = extract_data(p_cipher_type, argument);
-			} else if (validate(p_cipher_key, argument)) {
-				cipher_key = extract_data(p_cipher_key, argument);
-			} else if (validate(p_message, argument)) {
-				original_message = extract_data(p_message, argument);
-			} else {
-				printf("Error: Unexpected argument detected `%s`\n\n", argument);
-				exit(-10);
-			}
+	// Depending on the values selected by the user, using the appropriate
+	// cipher algorithm with relevant data.
+	if (data.cipher == PLAYFAIR) {
+		if (data.encrypt) {
+			result = crypt_play_fair(
+				data.processed_message,
+				data.processed_key,
+				data.verbose
+			);
+		} else {
+			result = decrypt_play_fair(
+				data.processed_message,
+				data.processed_key,
+				data.verbose
+			);
 		}
 	}
 
-	if (cipher_type == NULL) {
-		printf("\nDefaulting cipher type to `playfair`\n");
-		cipher_type = gen_str("playfair");
-	}
-
-	if (cipher_key == NULL) {
-		printf("\nDefaulting cipher key to `encryptor`\n");
-		cipher_key = gen_str("encryptor");
-	}
-
-	if (original_message == NULL) {
-		printf("\nDefaulting message to `ciphers`\n");
-		original_message = gen_str("ciphers");
-	}
-
-	// Performing replacements in cipher message.
-	string cipher_temp_message = gen_str(original_message);
-	unsigned int counter = 0;
-	for (unsigned int i = 0; original_message[i] != '\0'; i++)
-		if (original_message[i] != ' ')
-			cipher_temp_message[counter++] = original_message[i];
-
-	counter = 0;
-
-	// Performing replacements in the key to be used.
-	string modified_key = gen_str(cipher_key);
-	for (unsigned int i = 0; cipher_key[i] != '\0'; i++)
-		if (cipher_key[i] != ' ')
-			modified_key[counter++] = cipher_key[i];
-
-	string result = "No result found";
-
-	if (compare(
-		cipher_type,
-		"PlayFair",
-		false
-	)) {
-		result = crypt_play_fair(cipher_temp_message, modified_key, true);
-	}
-
-	printf("\n\nCipher Type: %s \nCipher Key: %s \nEncrypted Message: %s\n\n\n", cipher_type, cipher_key, result);
+	// Printing the result. Since the original message loses its formatting before being
+	// ciphered (spaces being removed, capitals being lowered), undo the appropriate changes
+	// while printing the output string.
+	printf("\nCipher Result: \n\t");
+	for (unsigned int i = 0; data.cipher_message[i] != '\0'; i++)
+		printf("%c",
+			   isalpha(data.cipher_message[i]) ?
+			   (isupper(data.cipher_message[i]) ? toupper(result[i]) : result[i]) :
+			   data.cipher_message[i]
+		);
 
 	return 0;
 }

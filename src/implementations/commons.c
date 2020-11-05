@@ -37,6 +37,42 @@ bool compare(char *string01, char *string02, const bool case_sensitive) {
 }
 
 /**
+ * An internal method to perform string comparison. Performs a case-insensitive
+ * check.
+ *
+ * @remarks
+ * 		Similar to `compare` method, however, this method works only in
+ * 		case-insensitive mode - performs the check by converting only characters
+ * 		from the first string to lower case before performing the check.
+ *
+ * @remarks
+ * 		Useful to compare a normal string to a string literal while ensuring
+ * 		a case-insensitive comparison.
+ *
+ * @param val01: String containing text that is to be converted to lower-case before comparison.
+ * @param val02: String that is to be directly compared - preferably a string literal.
+ *
+ * @return
+ * 		Boolean indicating if the two strings are an exact match of each other or not.
+ * 		The check performed is case-sensitive.
+ */
+inline bool l_compare(string val01, string val02) {
+	unsigned int len01 = strlen(val01);
+	unsigned int len02 = strlen(val02);
+
+	if (len01 != len02)
+		return false;
+
+	for (unsigned int i = 0; i < len01; i++)
+		// Comparing by simply converting characters from left string to lower-case
+		// while performing a check - return false if any check fails.
+		if (tolower(val01[i]) != val02[i])
+			return false;
+
+	return true;
+}
+
+/**
  * Compiles a string into a regex pattern - a simple convenience method to compile a
  * regex pattern while internally handling any errors as needed.
  *
@@ -276,4 +312,75 @@ string extract_data(string regex_pattern, string input_string) {
 		return input_string + result_vector[2];
 	else
 		return "";
+}
+
+/**
+ * Maps a string to a cipher-type enum. Used to accept a parameter from the user
+ * and convert it into an enum-value that can be stored and matched easily.
+ *
+ * @remarks
+ * 		In case the text cannot be mapped to a valid enum value, the result returned
+ * 		by this tuple will be of the type `UNDEFINED`. And the calling method should
+ * 		handle such a response appropriately.
+ *
+ * @param message: String text that is to be mapped to an enum value.
+ *
+ * @return
+ * 		A value of type `crypt` indicating the cipher type that the text maps to.
+ */
+inline enum crypt map_cipher(string message) {
+	if (l_compare(message, "playfair"))
+		return PLAYFAIR;
+	else
+		return UNDEFINED;
+}
+
+
+/**
+ * Convenience method to emulate the behaviour of `fgets` method to read a string
+ * as input from stdin.
+ *
+ * @remarks
+ * 		Will read one character at a time from stdin, and append it to destination
+ * 		string. If the character is string terminator, or new-line character - will
+ * 		stop reading from stdin and return the string formed.
+ *
+ * @notes
+ * 		Exists to replace `fgets` as it reads (and appends) newline character
+ * 		to the destination string - which is not needed, and makes the output
+ * 		be messy if it is being printed.
+ *
+ * @notes
+ * 		Excessive dependency on static variables (as opposed to local ones) - to ensure
+ * 		that runtime of this method in low.
+ *
+ * @param dest: Pointer to the destination string where the output is to be stored.
+ * @param string_len: Unsigned integer containing the length of the source string.
+ *
+ * @return
+ * 		The source string after all modifications have been made to it.
+ */
+extern inline string scan_str(string dest, unsigned int string_len) {
+	// Static variables, will be initialized as needed - declaring once to eliminate
+	// the time being wasted in creating/destroying them.
+
+	static char c;
+	static unsigned int i;
+
+	for (i = 0; i < string_len - 1; i++) {
+		// Reading one character at a time from stdin.
+		c = getchar();
+
+		// Breaking the loop if the character is a new line or string-terminator.
+		if (c == '\n' || c == '\0') {
+			dest[i] = '\0';
+			break;
+		}
+
+		dest[i] = c;
+	}
+
+	// String-terminator at the end - space has already been reserved in the loop
+	dest[string_len] = '\0';
+	return dest;
 }

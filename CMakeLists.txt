@@ -15,6 +15,7 @@ add_executable(
     src/headers/ciphers.h
     src/implementations/play_fair.c
     src/implementations/hill_cipher.c
+    src/implementations/railfence.c
 
     src/headers/data_input.h
     src/implementations/data_input.c
@@ -25,7 +26,7 @@ add_executable(
 
 # Adding the compile flags in debug mode. Will have to add these compile-time flags to the final release
 # mode as well.
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -lpcre -fms-extensions")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -lpcre -fms-extensions -lm")
 
 # Add the folder containing headers to be included in the project.
 target_include_directories(

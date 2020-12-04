@@ -1,5 +1,6 @@
 // Implementation of the structures defined in the common headers file.
 
+#include <pcre.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
@@ -331,6 +332,10 @@ string extract_data(string regex_pattern, string input_string) {
 inline enum crypt map_cipher(string message) {
 	if (l_compare(message, "playfair"))
 		return PLAYFAIR;
+	else if (l_compare(message, "hill"))
+		return HILL_CIPHER;
+	else if (l_compare(message, "railfence"))
+		return RAILFENCE;
 	else
 		return UNDEFINED;
 }

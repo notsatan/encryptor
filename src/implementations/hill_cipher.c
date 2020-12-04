@@ -60,6 +60,38 @@ void hc_populate_key(string key) {
 			(i < string_length) ? key[i] : (char) counter++ + 97;
 }
 
+
+/**
+ *
+ *
+ * @param key
+ */
+void hc_populate_inverse(string key) {
+	// Generating the key matrix for the algorithm - this matrix will then
+	// be inverted for the inverse matrix.
+	hc_populate_key(key);
+
+	// Creating a temporary matrix as the augmented matrix. Will be a
+	// mirrored matrix to which same operations as the original are performed.
+	char augmented_matrix[MATRIX_SIZE][MATRIX_SIZE];
+	char mirror_matrix[MATRIX_SIZE][MATRIX_SIZE];
+
+	// Iterating through each element of the augmented matrix, and setting its
+	// value such that the new matrix is an augmented matrix.
+	for (unsigned int i = 0; i < MATRIX_SIZE; i++) {
+		for (unsigned int j = 0; j < MATRIX_SIZE; j++) {
+			mirror_matrix[i][j] = hc_key_matrix[i][j] - 97;
+			augmented_matrix[i][j] = (i == j) ? 1 : 0;
+		}
+	}
+
+	for (unsigned int i = 0; i < MATRIX_SIZE; i++) {
+		for (unsigned int j = 0; j < MATRIX_SIZE; j++) {
+			// TODO Find the inverse of this matrix, decrypt this cipher and return the result.
+		}
+	}
+}
+
 /**
  * Internal function to print the matrix. Defined as an inner-level API,
  * that can either be accessed directly, or using the friendly-function.
@@ -74,13 +106,12 @@ void _hc_print_key(string pad_char, string end_line) {
 		// ensuring that the first line is actually padded with the character.
 		printf("%c%s", (i != 0) ? '\n' : '\0', pad_char);
 		for (unsigned int j = 0; j < MATRIX_SIZE; j++)
-			printf("%c  ", hc_key_matrix[i][j]);
+			printf("%d  ", hc_key_matrix[i][j]);
 	}
 
 	// Printing the end-line character.
 	printf("%s", end_line);
 }
-
 
 /**
  * Just a convenience method to be able to print the 2d matrix as needed. Exists

@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "commons.h"
 
@@ -14,6 +15,19 @@
 
 typedef short bool;
 typedef char *string;
+
+// Macro for fast creation of new strings.
+#define new_str(size) (string) malloc(size * sizeof(char))
+
+// Size of a small string - 15 characters.
+#define STRING_SMALL 15
+
+// Size of a medium string - 50 characters.
+#define STRING_MEDIUM 50
+
+// Size of a large string - 500 characters.
+#define STRING_LARGE 500
+
 
 struct user_data {
 	// String containing the message that is to be ciphered.

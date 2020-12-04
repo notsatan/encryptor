@@ -20,4 +20,11 @@ string decrypt_play_fair(string message, string key, bool verbose);
 
 string crypt_hill_cipher(string, string, bool);
 
+void validate_key_railfence(string key);
+
+string crypt_railfence(string key, string message, bool verbose);
+
+string decrypt_railfence(string key, string message, bool verbose);
+
+
 #endif //__encryptor_ciphers

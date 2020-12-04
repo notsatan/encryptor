@@ -1,17 +1,7 @@
 
 #include "data_input.h"
+#include "ciphers.h"
 
-// Macro for fast creation of new strings.
-#define new_str(size) (string) malloc(size * sizeof(char))
-
-// Size of a small string - 15 characters.
-#define STRING_SMALL 15
-
-// Size of a medium string - 50 characters.
-#define STRING_MEDIUM 50
-
-// Size of a large string - 500 characters.
-#define STRING_LARGE 500
 
 /**
  * Internal method to extract arguments passed to the program from the
@@ -48,14 +38,14 @@ void fetch_cli_args(struct user_data *this, unsigned int count, string *args) {
 		} else if (validate("^--(?i)encrypt$", arg)) {
 			this->encrypt = true;
 		} else if (validate("--(?i)decrypt$", arg)) {
-			this->cipher_key = false;
+			this->encrypt = false;
 		} else if (validate("^--message=(([a-zA-Z ]+))$", arg)) {
 			// Extracting the contents of the message.
 			this->cipher_message = extract_data("^--message=(([A-Za-z ]+))$", arg);
-		} else if (validate("^--key=(([A-Za-z ]+))$", arg)) {
+		} else if (validate("^--key=(([A-Za-z ]+|\\d+))$", arg)) {
 			// Extracting the key used with the cipher.
-			this->cipher_key = extract_data("^--key=(([A-Za-z ]+))$", arg);
-		} else if (validate("^--cipher=((playfair))$", arg)) {
+			this->cipher_key = extract_data("^--key=(([A-Za-z ]+|\\d+))$", arg);
+		} else if (validate("^--cipher=((playfair|hill|railfence))$", arg)) {
 			this->cipher = map_cipher(extract_data("^--cipher=((.*))$", arg));
 
 			if (this->cipher == UNDEFINED) {
@@ -174,14 +164,21 @@ void interactive(struct user_data *this, bool cli_used) {
 
 			scan_str(this->cipher_key, STRING_MEDIUM);
 
-			if (validate("^[a-zA-Z ]+$", this->cipher_key))
-				// Break out of the infinite loop.
+			if (validate("^(([a-zA-Z ]+|\\d+))$", this->cipher_key))
+				// Break out of the infinite loop - pure numeric key used in Railfence.
 				break;
 			else
 				// Print an error message - continue with the next iteration of the (infinite) loop.
 				printf("Error: Invalid key. The key should consist of only alphabets\n");
 		}
 	}
+
+	// Handling an edge-case check! In case of railfence cipher, the is supposed to be numeric.
+	if (this->cipher == RAILFENCE)
+		// Attempting to validate the key - if validation fails, the method-call will internally
+		// terminate the program. If the flow-of-control returns back, assume that the key
+		// is valid.
+		validate_key_railfence(this->cipher_key);
 
 	if (!cli_used || this->cipher_message == NULL) {
 		// Creating a string - was initialized as null.
@@ -231,7 +228,7 @@ void interactive(struct user_data *this, bool cli_used) {
 
 		// Deleting the temporary string.
 		free(temp_input);
-	} else {
+	} else if (!cli_used || this->verbose == -1) {
 		this->verbose = false;
 	}
 
@@ -340,8 +337,17 @@ void populate_data(struct user_data *this, int arg_count, string *argv) {
 	// Once all the argument(s) have their required values, modifying them to suit conditions
 	// includes converting characters to lower-case, and stripping off spaces and more.
 
-	// Creating mutated copies of the original values - these are devoid of non-alphabetical
-	// characters as well as spaces and numbers.
-	this->processed_message = mutate(this->cipher_message);
-	this->processed_key = mutate(this->cipher_key);
+	if (this->cipher == PLAYFAIR || this->cipher == HILL_CIPHER) {
+		// Creating mutated copies of the original values - devoid of non-alphabetical
+		// characters as well as spaces and numbers - this is what will be used in case
+		// of playfair and hill cipher - they cannot work with different cases and/or
+		// spaces being involved in the source(s).
+		this->processed_message = mutate(this->cipher_message);
+		this->processed_key = mutate(this->cipher_key);
+	} else if (this->cipher == RAILFENCE) {
+		// RailFence can work with capitalization and/or spaces in between source(s),
+		// creating a copy of the original strings in this case.
+		this->processed_message = mutate(this->cipher_message);
+		this->processed_key = gen_str(this->cipher_key);
+	}
 }

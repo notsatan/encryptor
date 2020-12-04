@@ -24,4 +24,7 @@ void validate_key_railfence(string key);
 
 string crypt_railfence(string key, string message, bool verbose);
 
+string decrypt_railfence(string key, string message, bool verbose);
+
+
 #endif //__encryptor_ciphers

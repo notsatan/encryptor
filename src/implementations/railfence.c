@@ -96,6 +96,28 @@ extern inline unsigned int convert(string number) {
 	return result;
 }
 
+extern inline unsigned int get_length(unsigned int str_len, unsigned int rows) {
+	unsigned int row = 0;
+	unsigned int column = 0;
+
+	bool dir_down = false;
+
+	unsigned int new_len = 0;
+
+	for (unsigned int i = 0;; i++) {
+		if (row == 0 || row == rows - 1)
+			dir_down = !dir_down;
+
+		new_len++;
+		if (new_len > str_len && row == rows - 1)
+			break;
+
+		column++;
+		dir_down ? row++ : row--;
+	}
+
+	return new_len;
+}
 
 /**
  * Method to encrypt a message using the RailFence cipher algorithm.
@@ -119,10 +141,14 @@ string crypt_railfence(string key, string message, bool verbose) {
 	// Converting the string into an integer.
 	unsigned int row_count = convert(key);
 
+	// Calculating the current length of the string - and the extra length needed
+	// to pad the string such that it fits the diagonal.
+	unsigned int message_length = strlen(message);
+	unsigned int total_length = get_length(message_length, row_count);
+
 	// Pad the existing string to ensure it contains enough characters.
-	if (strlen(message) % row_count != 0) {
-		unsigned int extra_len = strlen(message) % row_count;
-		unsigned int message_length = strlen(message);
+	if (message_length < total_length) {
+		unsigned int extra_len = total_length - message_length;
 
 		// Creating a temporary string of the required length.
 		string temp_str = gen_str_pad(message, extra_len);
@@ -132,28 +158,28 @@ string crypt_railfence(string key, string message, bool verbose) {
 			// Padding with an `X` character.
 			temp_str[i + message_length] = 'X';
 
-		// Deleting the original message string, and using this temp string as the
-		// new message
+		// Using this temp string as the new message.
 		message = temp_str;
 	}
 
-	unsigned int message_length = strlen(message);
-
 	if (verbose)
+		// Printing the padded version of the message.
 		printf("\nPadded message:\n\t%s\n\n", message);
 
 	// Create a new string to store the result into.
-	string result = (string) malloc(message_length * sizeof(char));
+	string result = (string) malloc(total_length * sizeof(char));
 
 	// Modifying each element of the result string to contain string terminator (hack-y approach)
-	for (unsigned int i = 0; i < message_length; i++)
+	for (unsigned int i = 0; i < total_length; i++)
 		result[i] = '\0';
 
 	// Creating a 2d matrix which will be populated using characters of the message
-	char matrix[row_count][message_length];
+	char matrix[row_count][total_length];
+
+	printf("Message Length: %d\n", message_length);
 
 	for (unsigned int i = 0; i < row_count; i++)
-		for (unsigned int j = 0; j < message_length; j++)
+		for (unsigned int j = 0; j < total_length; j++)
 			matrix[i][j] = ' ';
 
 	// Populating the 2d matrix.
@@ -161,7 +187,7 @@ string crypt_railfence(string key, string message, bool verbose) {
 	unsigned int row = 0;
 	unsigned int column = 0;
 
-	for (unsigned int i = 0; i < message_length; i++) {
+	for (unsigned int i = 0; i < total_length; i++) {
 		if (row == 0 || row == row_count - 1)
 			dir_down = !dir_down;
 
@@ -169,27 +195,31 @@ string crypt_railfence(string key, string message, bool verbose) {
 		dir_down ? row++ : row--;
 	}
 
+	// Printing the matrix in verbose mode.
+	if (verbose) {
+		printf("\n\nMatrix: \n\n");
+
+		for (
+			unsigned int i = 0; i < row_count; i++) {
+			printf("%c\t", (i == 0) ? '\0' : '\n');
+
+			for (unsigned int j = 0; j < total_length; j++)
+				printf("%c\t", matrix[i][j]);
+		}
+	}
 
 
 	// Finally, fetching the result as needed.
 	unsigned int counter = 0;
-	for (unsigned int i = 0; i < row_count; i++) {
-		for (int j = 0; j < message_length; j++) {
-			if (matrix[i][j] != ' ') {
+	for (unsigned int i = 0; i < row_count; i++)
+		for (int j = 0; j < total_length; j++)
+			if (matrix[i][j] != ' ')
 				result[counter++] = matrix[i][j];
 
-				if (verbose) {
-					printf(
-						"\n\nIntermediate Result: \n\t%s",
-						result
-					);
-				}
-			}
-		}
-	}
 
 	if (verbose)
 		printf("\n\n");
 
-	return result;
+	return
+		result;
 }

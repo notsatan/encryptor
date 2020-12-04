@@ -38,7 +38,7 @@ void fetch_cli_args(struct user_data *this, unsigned int count, string *args) {
 		} else if (validate("^--(?i)encrypt$", arg)) {
 			this->encrypt = true;
 		} else if (validate("--(?i)decrypt$", arg)) {
-			this->cipher_key = false;
+			this->encrypt = false;
 		} else if (validate("^--message=(([a-zA-Z ]+))$", arg)) {
 			// Extracting the contents of the message.
 			this->cipher_message = extract_data("^--message=(([A-Za-z ]+))$", arg);

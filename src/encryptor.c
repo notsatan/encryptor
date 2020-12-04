@@ -86,21 +86,32 @@ int main(int argc, string *argv) {
 					data.verbose
 				);
 
+			else
+				result = decrypt_railfence(
+					data.processed_key,
+					data.processed_message,
+					data.verbose
+				);
+
 			break;
 
 		default:
 			printf("No state found in the main switch :(");
 	}
 
+	unsigned int counter = 0;
+	unsigned int len_message = strlen(data.cipher_message);
+
 	// Printing the result. Since the original message loses its formatting before being
 	// ciphered (spaces being removed, capitals being lowered), undo the appropriate changes
 	// while printing the output string.
 	printf("\nCipher Result: \n\t");
-	for (unsigned int i = 0; data.cipher_message[i] != '\0'; i++)
+	for (unsigned int i = 0; result[counter] != '\0'; i++)
 		printf("%c",
+			   (i < len_message) ?
 			   isalpha(data.cipher_message[i]) ?
-			   (isupper(data.cipher_message[i]) ? toupper(result[i]) : result[i]) :
-			   data.cipher_message[i]
+			   (isupper(data.cipher_message[i]) ? toupper(result[counter++]) : result[counter++]) :
+			   data.cipher_message[i] : result[counter++]
 		);
 
 	printf("\n\n");

@@ -43,7 +43,7 @@ extern inline string scan_str(string destination, unsigned int length);
  */
 enum crypt {
 	PLAYFAIR,
-	HILL,
+	HILL_CIPHER,
 	RAILFENCE,
 	UNDEFINED
 };

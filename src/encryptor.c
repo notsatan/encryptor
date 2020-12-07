@@ -16,22 +16,7 @@ typedef short bool;
 typedef char *string;
 typedef const char *const_str;
 
-/**
- * A test method made for debugging/editing the code without making any
- * breaking changes to the main method. Designed so that the flow-of-control
- * ends the program instead of going back to the main method.
- */
-void subroutine(int argc, string *argv) {
-	// Debug/Test code here.
-
-	// Printing a message to avoid any confusion.
-	printf("\n\nDebug run terminated.\n");
-	exit(0);
-}
-
 int main(int argc, string *argv) {
-//	subroutine(argc, argv);
-
 	// Declaring a structure to accept/process user input.
 	struct user_data data;
 
@@ -70,11 +55,19 @@ int main(int argc, string *argv) {
 			break;
 
 		case HILL_CIPHER:
-			result = crypt_hill_cipher(
-				data.processed_message,
-				data.processed_key,
-				data.verbose
-			);
+			if (data.encrypt) {
+				result = crypt_hill_cipher(
+					data.processed_message,
+					data.processed_key,
+					data.verbose
+				);
+			} else {
+				result = decrypt_hill_cipher(
+					data.processed_message,
+					data.processed_key,
+					data.verbose
+				);
+			}
 
 			break;
 
@@ -97,6 +90,7 @@ int main(int argc, string *argv) {
 
 		default:
 			printf("No state found in the main switch :(");
+			exit(-10);
 	}
 
 	unsigned int counter = 0;

@@ -18,7 +18,9 @@ string crypt_play_fair(string message, string key, bool verbose);
 
 string decrypt_play_fair(string message, string key, bool verbose);
 
-string crypt_hill_cipher(string, string, bool);
+string crypt_hill_cipher(string message, string key, bool verbose);
+
+string decrypt_hill_cipher(string message, string key, bool verbose);
 
 void validate_key_railfence(string key);
 

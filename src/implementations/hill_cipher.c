@@ -14,6 +14,7 @@
  */
 
 #include <stdio.h>
+#include <math.h>
 
 #include "commons.h"
 #include "ciphers.h"
@@ -60,6 +61,10 @@ void hc_populate_key(string key) {
 			(i < string_length) ? key[i] : (char) counter++ + 97;
 }
 
+int mod(int a, int b) {
+	int r = a % b;
+	return r < 0 ? r + b : r;
+}
 
 /**
  *
@@ -71,25 +76,66 @@ void hc_populate_inverse(string key) {
 	// be inverted for the inverse matrix.
 	hc_populate_key(key);
 
-	// Creating a temporary matrix as the augmented matrix. Will be a
-	// mirrored matrix to which same operations as the original are performed.
-	char augmented_matrix[MATRIX_SIZE][MATRIX_SIZE];
-	char mirror_matrix[MATRIX_SIZE][MATRIX_SIZE];
+	// Creating a temporary matrix as the augmented matrix.
+	int augmented_matrix[MATRIX_SIZE][MATRIX_SIZE];
 
-	// Iterating through each element of the augmented matrix, and setting its
-	// value such that the new matrix is an augmented matrix.
-	for (unsigned int i = 0; i < MATRIX_SIZE; i++) {
-		for (unsigned int j = 0; j < MATRIX_SIZE; j++) {
-			mirror_matrix[i][j] = hc_key_matrix[i][j] - 97;
-			augmented_matrix[i][j] = (i == j) ? 1 : 0;
+	float determinant = 0;
+	for (int i = 0; i < 3; i++)
+		determinant = determinant + (
+			(hc_key_matrix[0][i] - 97) * (
+				(hc_key_matrix[1][(i + 1) % 3] - 97) *
+				(hc_key_matrix[2][(i + 2) % 3] - 97) -
+				(hc_key_matrix[1][(i + 2) % 3] - 97) *
+				(hc_key_matrix[2][(i + 1) % 3] - 97)
+			)
+		);
+
+	// Getting the result and the multiplicative inverse at once.
+	int result = (int) determinant % 26;
+	int multi_inverse = 0;
+	while ((multi_inverse * result) % 26 != 1)
+		multi_inverse++;
+
+	// Populating augmented matrix with initial set of values - will contain
+	// the co-factor matrix by the end of this step.
+	bool negative = false;
+	for (unsigned int row = 0; row < MATRIX_SIZE; row++) {
+		for (unsigned int column = 0; column < MATRIX_SIZE; column++) {
+			int first = 1;
+			int second = 1;
+
+			unsigned int first_row = 0;
+			for (unsigned int i = 0; i < MATRIX_SIZE; i++)
+				for (unsigned int j = 0; j < MATRIX_SIZE; j++)
+					if (i != row && j != column) {
+						if (first_row == 0 || first_row == 3)
+							first *= hc_key_matrix[i][j] - 97;
+						else
+							second *= hc_key_matrix[i][j] - 97;
+
+						first_row++;
+					}
+
+			augmented_matrix[row][column] = ((negative) ? -1 : 1) * (first - second);
+			negative = !negative;
 		}
 	}
 
-	for (unsigned int i = 0; i < MATRIX_SIZE; i++) {
-		for (unsigned int j = 0; j < MATRIX_SIZE; j++) {
-			// TODO Find the inverse of this matrix, decrypt this cipher and return the result.
-		}
-	}
+	// Converting the co-factor matrix into transpose - to get adjoint matrix.
+	for (unsigned int i = 0; i < MATRIX_SIZE; i++)
+		for (unsigned int j = 0; j < MATRIX_SIZE; j++)
+			if (i <= j) {
+				int temp = mod(augmented_matrix[i][j], 26);
+
+				augmented_matrix[i][j] = mod(augmented_matrix[j][i], 26);
+				augmented_matrix[j][i] = temp;
+			}
+
+	// Multiplying by the multiplicative inverse, and storing the result in the
+	// original matrix, from where it will be used to get the result.
+	for (unsigned int i = 0; i < MATRIX_SIZE; i++)
+		for (unsigned int j = 0; j < MATRIX_SIZE; j++)
+			hc_key_matrix[i][j] = mod(augmented_matrix[i][j] * multi_inverse, 26) + 97;
 }
 
 /**
@@ -106,7 +152,7 @@ void _hc_print_key(string pad_char, string end_line) {
 		// ensuring that the first line is actually padded with the character.
 		printf("%c%s", (i != 0) ? '\n' : '\0', pad_char);
 		for (unsigned int j = 0; j < MATRIX_SIZE; j++)
-			printf("%d  ", hc_key_matrix[i][j]);
+			printf("%c  ", hc_key_matrix[i][j]);
 	}
 
 	// Printing the end-line character.
@@ -214,19 +260,19 @@ void hc_current_mapping(string multiplier, string result, const_str padding, con
  *
  * @param message: String containing the message to be encrypted.
  * @param key: String containing the message to be used as a key.
- * @param is_noob: Boolean indicating if verbose mode is to be used.
+ * @param verbose: Boolean indicating if verbose mode is to be used.
  *
  * @return
  * 		A string containing the encrypted version of the original text message.
  * 		Will be devoid of all spaces, can be mapped to the input string to
  * 		be able to add back spaces as needed.
  */
-string crypt_hill_cipher(string message, string key, bool is_noob) {
+string crypt_hill_cipher(string message, string key, bool verbose) {
 	// Generating the key matrix.
 	hc_populate_key(key);
 
-	if (is_noob) {
-		printf("Key Matrix:\n");
+	if (verbose) {
+		printf("\nKey Matrix:\n");
 		_hc_print_key("\t", "\n\n");
 		printf("Original Message: \n\t`%s`\n", message);
 	}
@@ -265,7 +311,7 @@ string crypt_hill_cipher(string message, string key, bool is_noob) {
 			temp_result[j] = rev_map(val % BASE_MOD);
 		}
 
-		if (is_noob) {
+		if (verbose) {
 			printf("\n\nIteration %d:\n", (i / 3) + 1);
 			strcat(result, temp_result);
 
@@ -277,6 +323,71 @@ string crypt_hill_cipher(string message, string key, bool is_noob) {
 			);
 
 			printf("Current Result: \n\t`%s`\n", result);
+		}
+	}
+
+	// Freeing up space from the temporary string - just a good practice.
+	free(temp);
+
+	return gen_str(result);
+}
+
+string decrypt_hill_cipher(string message, string key, bool verbose) {
+	// Generating the key matrix.
+	hc_populate_inverse(key);
+
+	if (verbose) {
+		printf("\nKey Matrix:\n");
+		_hc_print_key("\t", "\n\n");
+		printf("Original Message: \n\t`%s`\n", message);
+	}
+
+	// Temporary string(s) to hold `n` characters in the string at the time.
+	string temp = (string) malloc(MATRIX_SIZE * sizeof(char));
+	string temp_result = (string) malloc(MATRIX_SIZE * sizeof(char));
+
+	// Calculating the length of the original message, and of the result - they might
+	// not always match. If the message length is not a multiple of `MATRIX_SIZE`, it
+	// will be padded with extra characters to make it fit.
+	unsigned int message_length = strlen(message);
+	unsigned int result_length = message_length + (message_length % MATRIX_SIZE);
+
+	// The result string - will be used to contain the result as it is being generated.
+	string result = (string) malloc(result_length * sizeof(char));
+
+	// Starting a loop to iterate between every `MATRIX_SIZE` elements. If a
+	// tri-graph is selected for example, iterating between every three elements.
+	for (unsigned int i = 0; i < result_length; i += MATRIX_SIZE) {
+		for (unsigned int counter = 0; counter < MATRIX_SIZE; counter++)
+			// Picking up the first `n` characters from the current position - if the
+			// message has ran out of characters, padding with null character.
+			temp[counter] = (i + counter < message_length) ? message[i + counter] : PAD_NULL;
+
+		// Matrix multiplication - treat the contents of the temp string as a matrix, and perform
+		// multiplication with the key matrix.
+		for (unsigned int j = 0; j < MATRIX_SIZE; j++) {
+			unsigned int val = 0;
+
+			for (unsigned int k = 0; k < MATRIX_SIZE; k++)
+				val += map(hc_key_matrix[j][k]) * map(temp[k]);
+
+			// Adding the results to the temp result string - to make sure that the contents of this
+			// multiplication can be printed in verbose mode. Calculating the modulus using the macro.
+			temp_result[j] = rev_map(val % BASE_MOD);
+		}
+
+		if (verbose) {
+			printf("\n\nIteration %d:\n", (i / 3) + 1);
+			strcat(result, temp_result);
+
+			hc_current_mapping(
+				temp,
+				temp_result,
+				"\t",
+				"\n\n"
+			);
+
+			printf("Intermediate Result: \n\t`%s`\n", result);
 		}
 	}
 

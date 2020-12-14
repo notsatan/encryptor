@@ -174,6 +174,8 @@ int main(int argc, string *argv) {
 			   data.cipher_message[i] : result[counter++]
 		);
 
+	fflush(stdout);
+
 	// Logging the results of the current run into the log file.
 	if (file != NULL) {
 		fprintf(

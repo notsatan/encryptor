@@ -310,9 +310,10 @@ string crypt_hill_cipher(string message, string key, bool verbose) {
 			temp_result[j] = rev_map(val % BASE_MOD);
 		}
 
+		strcat(result, temp_result);
+
 		if (verbose) {
 			printf("\n\nIteration %d:\n", (i / 3) + 1);
-			strcat(result, temp_result);
 
 			hc_current_mapping(
 				temp,
@@ -375,9 +376,10 @@ string decrypt_hill_cipher(string message, string key, bool verbose) {
 			temp_result[j] = rev_map(val % BASE_MOD);
 		}
 
+		strcat(result, temp_result);
+
 		if (verbose) {
 			printf("\n\nIteration %d:\n", (i / 3) + 1);
-			strcat(result, temp_result);
 
 			hc_current_mapping(
 				temp,
@@ -386,7 +388,7 @@ string decrypt_hill_cipher(string message, string key, bool verbose) {
 				"\n\n"
 			);
 
-			printf("Intermediate Result: \n\t`%s`\n", result);
+			printf("Current Result: \n\t`%s`\n", result);
 		}
 	}
 

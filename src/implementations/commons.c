@@ -171,13 +171,13 @@ inline string raw_gen_str(string message, unsigned int len) {
 		len = strlen(message) + 1;
 
 	// Creating a new string.
-	string temp = (string) malloc(len * sizeof(char));
+	string temp = (string) malloc((len * sizeof(char)) - 1);
 
 	for (unsigned int i = 0; i < len - 1; i++)
 		temp[i] = message[i];
 
 	// Adding the string terminator to the end of the string.
-	temp[len] = '\0';
+	temp[len-1] = '\0';
 	return temp;
 }
 
